@@ -25,7 +25,7 @@ public slots:
 
 public:
     void LoadModel(const QString &filename);
-
+//    void paintEvent(QPaintEvent *e) override;
 
     void initializeGL();
     void resizeGL(int w, int h);

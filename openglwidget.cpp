@@ -3,6 +3,7 @@
 #include<QOpenGLTexture>
 #include<qimage.h>
 #include<QKeyEvent>
+#include <QPainter>
 
 OpenGLWidget::OpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -162,6 +163,17 @@ void OpenGLWidget::resizeGL(int w, int h)
 
 }
 
+//void OpenGLWidget::paintEvent(QPaintEvent *e)
+//{
+//    QPainter painter(this);;
+
+//    QRadialGradient gradient(40, 40, 40, 40, 40);
+//    gradient.setColorAt(0.2, Qt::yellow);
+//    gradient.setColorAt(1, Qt::transparent);
+//    painter.setBrush(gradient);
+//    painter.drawRect(-width(),-height(), width()*2, height()*2);
+//}
+
 void OpenGLWidget::paintGL()
 {
     int w=width();
@@ -228,8 +240,9 @@ void OpenGLWidget::paintGL()
     }
     //    glDrawArrays(GL_POINTS,0,1);
 #endif
-    bool normals = true;
-    bool wireframe = true;
+    glEnable(GL_MULTISAMPLE);
+    bool normals = false;
+    bool wireframe = false;
     if (wireframe) {
         glVertexPointer(3, GL_FLOAT, 0, (float *)m_points.data());
         glDrawElements(GL_LINES, m_edgeIndices.size(), GL_UNSIGNED_INT, m_edgeIndices.data());
@@ -264,6 +277,9 @@ void OpenGLWidget::paintGL()
 
 //    glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_DEPTH_TEST);
+
+    glDisable(GL_MULTISAMPLE);
+
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent *event)
