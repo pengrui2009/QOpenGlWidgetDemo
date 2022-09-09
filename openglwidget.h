@@ -3,12 +3,14 @@
 
 #include "point3d.h"
 
+#include <QTime>
 #include <QTimer>
 #include <QWidget>
-#include"qopenglwidget.h"
-#include<qopenglfunctions.h>
-#include<qopenglshaderprogram.h>
-#include<QOpenGLBuffer>
+#include "qopenglwidget.h"
+#include <qopenglfunctions.h>
+#include <qopenglshaderprogram.h>
+#include <QOpenGLBuffer>
+
 class QOpenGLShaderProgram;
 class QOpenGLTexture;
 
@@ -43,6 +45,9 @@ private:
     QVector<int> m_pointIndices;
 
     QTimer m_timer;
+    QTime m_time;
+    int m_lastTime;
+    int m_mouseEventTime;
 
     GLfloat m_rotation_x;
     GLfloat m_rotation_y;
@@ -51,6 +56,13 @@ private:
     QPointF m_prev_pos;
     QPointF m_curr_pos;
 
+    float m_distance;
+    Point3d m_rotation;
+    Point3d m_angularMomentum;
+    Point3d m_accumulatedMomentum;
+
+    QColor m_modelColor;
+    QColor m_backgroundColor;
 
     QOpenGLShaderProgram *program;
     QOpenGLBuffer vbo;

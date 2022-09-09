@@ -1,29 +1,40 @@
 #include "openglwidget.h"
-#include<qopenglshaderprogram.h>
-#include<QOpenGLTexture>
-#include<qimage.h>
-#include<QKeyEvent>
+#include <GL/glu.h>
 
-OpenGLWidget::OpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
+#include <qopenglshaderprogram.h>
+#include <QOpenGLTexture>
+
+#include <QImage>
+#include <QtMath>
+#include <QKeyEvent>
+
+OpenGLWidget::OpenGLWidget(QWidget *parent) : QOpenGLWidget(parent), m_angularMomentum(0, 40, 0)
 {
     translate=-6.0;
     xRot=zRot=0.0;
     yRot=-30.0;
 
+    m_distance = 1.4f;
+    m_lastTime = 0;
+
     m_rotation_x = 30;
     m_rotation_y = 0;
     m_rotation_z = 0;
 
-    LoadModel("/home/pengrui/workspace/qt/QOpenGLWidgetDemo/models/qt.obj");
+    m_modelColor.setRgb(255, 250, 0);
+    m_backgroundColor.setRgb(0, 139, 235);
+
+    LoadModel("/home/tusimple/qt/QOpenGLWidgetDemo/models/chair.obj");
 
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(slot_timeout()));
     m_timer.start(1000);
+    m_time.start();
 }
 
 void OpenGLWidget::slot_timeout()
 {
-    m_rotation_x += 0.5;
-    update();
+//    m_rotation_x += 0.5;
+//    update();
 }
 
 void OpenGLWidget::LoadModel(const QString &filename)
@@ -31,6 +42,11 @@ void OpenGLWidget::LoadModel(const QString &filename)
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly))
         return;
+
+    m_points.clear();
+    m_normals.clear();
+    m_edgeIndices.clear();
+    m_pointIndices.clear();
 
     Point3d boundsMin( 1e9, 1e9, 1e9);
     Point3d boundsMax(-1e9,-1e9,-1e9);
@@ -106,6 +122,45 @@ void OpenGLWidget::initializeGL()
     initializeOpenGLFunctions();
     glEnable(GL_DEPTH_TEST);
     glEnableClientState(GL_VERTEX_ARRAY);
+
+    glClearColor(m_backgroundColor.redF(), m_backgroundColor.greenF(), m_backgroundColor.blueF(), 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+//    if (!m_model)
+//        return;
+
+    glMatrixMode(GL_PROJECTION);
+
+    glPushMatrix();
+    glLoadIdentity();
+    gluPerspective(70, width() / height(), 0.01, 1000);
+
+
+//    glMatrixMode(GL_MODELVIEW);
+//    glPushMatrix();
+//    glLoadIdentity();
+
+//    const float pos[] = { static_cast<float>(m_lightItem->x() - width() / 2), static_cast<float>(height() / 2 - m_lightItem->y()), 512, 0 };
+//    glLightfv(GL_LIGHT0, GL_POSITION, pos);
+//    glColor4f(m_modelColor.redF(), m_modelColor.greenF(), m_modelColor.blueF(), 1.0f);
+
+//    const int delta = m_time.elapsed() - m_lastTime;
+//    m_rotation += m_angularMomentum * (delta / 1000.0);
+//    m_lastTime += delta;
+
+//    glTranslatef(0, 0, -m_distance);
+//    glRotatef(m_rotation.x, 1, 0, 0);
+//    glRotatef(m_rotation.y, 0, 1, 0);
+//    glRotatef(m_rotation.z, 0, 0, 1);
+
+//    glEnable(GL_MULTISAMPLE);
+////    m_model->render(m_wireframeEnabled, m_normalsEnabled);
+//    glDisable(GL_MULTISAMPLE);
+
+//    glPopMatrix();
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
 #if 0
     texture[0]=new QOpenGLTexture(QImage(QString(":/myopengl/side%1.bmp")));
     texture[1]=new QOpenGLTexture(QImage(QString(":/myopengl/side%2.bmp")));
@@ -168,8 +223,7 @@ void OpenGLWidget::paintGL()
     int h=height();
     int side=qMin(w,h);
 
-    glViewport((w-side)/2,(h-side)/2,side,side);
-    glClear(GL_COLOR_BUFFER_BIT|GL_ACCUM_BUFFER_BIT);
+
 #if 0
     GLfloat vertices[2][4][3]=
     {
@@ -228,8 +282,25 @@ void OpenGLWidget::paintGL()
     }
     //    glDrawArrays(GL_POINTS,0,1);
 #endif
-    bool normals = true;
-    bool wireframe = true;
+    bool normals = false;
+    bool wireframe = false;
+
+
+    const int delta = m_time.elapsed() - m_lastTime;
+    m_rotation += m_angularMomentum * (delta / 1000.0);
+    m_lastTime += delta;
+//    qDebug() << "m_rotation.x:" <<m_rotation.x;
+//    qDebug() << "m_rotation.y:" <<m_rotation.y;
+//    qDebug() << "m_rotation.z:" <<m_rotation.z;
+
+//    glTranslatef(0, 0, -m_distance);
+    glRotatef(m_rotation.x, 1, 0, 0);
+    glRotatef(m_rotation.y, 0, 1, 0);
+    glRotatef(m_rotation.z, 0, 0, 1);
+
+    glViewport((w-side)/2,(h-side)/2,side,side);
+    glClear(GL_COLOR_BUFFER_BIT|GL_ACCUM_BUFFER_BIT);
+
     if (wireframe) {
         glVertexPointer(3, GL_FLOAT, 0, (float *)m_points.data());
         glDrawElements(GL_LINES, m_edgeIndices.size(), GL_UNSIGNED_INT, m_edgeIndices.data());
@@ -258,9 +329,7 @@ void OpenGLWidget::paintGL()
         glDrawArrays(GL_LINES, 0, normals.size());
     }
 
-    glRotatef(m_rotation_x, 1, 0, 0);
-    glRotatef(m_rotation_y, 0, 1, 0);
-    glRotatef(m_rotation_z, 0, 0, 1);
+
 
 //    glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_DEPTH_TEST);
@@ -294,54 +363,57 @@ void OpenGLWidget::keyPressEvent(QKeyEvent *event)
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
+//    if (event->isAccepted())
+//        return;
 
-    if (event->isAccepted())
-        return;
     if (event->buttons() & Qt::LeftButton) {
         const QPointF delta = event->pos();
         const Point3d angularImpulse = Point3d(delta.y(), delta.x(), 0) * 0.1;
 
-//        m_rotation += angularImpulse;
-//        m_accumulatedMomentum += angularImpulse;
+        m_rotation += angularImpulse;
+        m_accumulatedMomentum += angularImpulse;
 
 //        event->accept();
+//        const int delta1 = m_time.elapsed() - m_lastTime;
+//        m_rotation += m_angularMomentum * (delta1 / 1000.0);
+//        m_lastTime += delta1;
         update();
     }
-    QOpenGLWidget::mouseMoveEvent(event);
+
+//    QOpenGLWidget::mouseMoveEvent(event);
 }
 
 void OpenGLWidget::mousePressEvent(QMouseEvent *event)
 {
+//    if (event->isAccepted())
+//        return;
 
-    if (event->isAccepted())
-        return;
-
-//    m_mouseEventTime = m_time.elapsed();
-//    m_angularMomentum = m_accumulatedMomentum = Point3d();
-    event->accept();
-    QOpenGLWidget::mousePressEvent(event);
+    m_mouseEventTime = m_time.elapsed();
+    m_angularMomentum = m_accumulatedMomentum = Point3d();
+//    event->accept();
+//    QOpenGLWidget::mousePressEvent(event);
 }
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    if (event->isAccepted())
-        return;
+//    if (event->isAccepted())
+//        return;
 
-//    const int delta = m_time.elapsed() - m_mouseEventTime;
-//    m_angularMomentum = m_accumulatedMomentum * (1000.0 / qMax(1, delta));
+    const int delta = m_time.elapsed() - m_mouseEventTime;
+    m_angularMomentum = m_accumulatedMomentum * (1000.0 / qMax(1, delta));
 //    event->accept();
     update();
-    QOpenGLWidget::mouseReleaseEvent(event);
+//    QOpenGLWidget::mouseReleaseEvent(event);
 }
 
 void OpenGLWidget::wheelEvent(QWheelEvent *event)
 {
-    if (event->isAccepted())
-        return;
+//    if (event->isAccepted())
+//        return;
 
-//    m_distance *= qPow(1.2, -event->delta() / 120);
+    m_distance *= qPow(1.2, -event->delta() / 120);
 //    event->accept();
     update();
-    QOpenGLWidget::wheelEvent(event);
+//    QOpenGLWidget::wheelEvent(event);
 }
 
