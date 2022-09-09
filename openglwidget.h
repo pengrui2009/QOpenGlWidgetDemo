@@ -1,61 +1,44 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
-#include "point3d.h"
-
+#include <QOpenGLWidget>
+#include <QOpenGLExtraFunctions>
+#include <QOpenGLBuffer>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLTexture>
 #include <QTimer>
-#include <QWidget>
-#include"qopenglwidget.h"
-#include<qopenglfunctions.h>
-#include<qopenglshaderprogram.h>
-#include<QOpenGLBuffer>
-class QOpenGLShaderProgram;
-class QOpenGLTexture;
-
-class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+#include <QTime>
+#include <QtMath>
+class OpenGLWidget : public QOpenGLWidget,public QOpenGLExtraFunctions
 {
     Q_OBJECT
-public:
-    explicit OpenGLWidget(QWidget *parent = nullptr);
-
-//signals:
-
-public slots:
-    void slot_timeout();
 
 public:
-    void LoadModel(const QString &filename);
-
-
-    void initializeGL();
-    void resizeGL(int w, int h);
-    void paintGL();
-    void keyPressEvent(QKeyEvent*event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void wheelEvent(QWheelEvent *event);
+    OpenGLWidget(QWidget *parent = 0);
+    ~OpenGLWidget();
+protected:
+    virtual void initializeGL() override;
+    virtual void resizeGL(int w,int h) override;
+    virtual void paintGL() override;
+    virtual bool event(QEvent *e) override;
 private:
-    QString m_fileName;
-    QVector<Point3d> m_points;
-    QVector<Point3d> m_normals;
-    QVector<int> m_edgeIndices;
-    QVector<int> m_pointIndices;
+    QVector<float> vertices;
+    QVector<QVector3D> cubePositions;
+    QOpenGLShaderProgram shaderProgram;
+    QOpenGLBuffer VBO;
+    QOpenGLVertexArrayObject VAO;
+    QOpenGLTexture texture;
+    QOpenGLTexture texture1;
+    QTimer timer;
 
-    QTimer m_timer;
+    QVector3D cameraPos;
+    QVector3D cameraTarget;
+    QVector3D cameraDirection;
+    QVector3D cameraRight;
+    QVector3D cameraUp;
 
-    GLfloat m_rotation_x;
-    GLfloat m_rotation_y;
-    GLfloat m_rotation_z;
-
-    QPointF m_prev_pos;
-    QPointF m_curr_pos;
-
-
-    QOpenGLShaderProgram *program;
-    QOpenGLBuffer vbo;
-    QOpenGLTexture* texture[2];
-    GLfloat translate,xRot,yRot,zRot;
+//    Camera camera;
 };
 
 

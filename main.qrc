@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/triangle.frag</file>
+        <file>resources/triangle.vert</file>
+        <file>resources/msg_info.png</file>
+        <file>resources/tusimple_logo.png</file>
+        <file>resources/shaders/triangleShader.frag</file>
+        <file>resources/shaders/triangleShader.vert</file>
+        <file>resources/awesomeface.png</file>
+        <file>resources/container.jpg</file>
+        <file>resources/models/untitled_quardfaced.mtl</file>
+        <file>resources/models/untitled_quardfaced.obj</file>
+        <file>resources/models/untitled_trianglefaced.mtl</file>
+        <file>resources/models/untitled_trianglefaced.obj</file>
+    </qresource>
+</RCC>

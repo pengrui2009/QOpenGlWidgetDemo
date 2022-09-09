@@ -1,347 +1,168 @@
 #include "openglwidget.h"
-#include<qopenglshaderprogram.h>
-#include<QOpenGLTexture>
-#include<qimage.h>
-#include<QKeyEvent>
+#include <QtMath>
 
-OpenGLWidget::OpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
+OpenGLWidget::OpenGLWidget(QWidget *parent)
+    : QOpenGLWidget(parent)
+    , VBO(QOpenGLBuffer::VertexBuffer)
+    , texture(QOpenGLTexture::Target2D)
+    , texture1(QOpenGLTexture::Target2D)
+    , cameraPos(0.0f,0.0f,3.0f)
+    , cameraTarget(0.0f,0.0f,0.0f)
+    , cameraDirection(cameraPos-cameraTarget)
+    , cameraRight(QVector3D::crossProduct({0.0f,1.0f,0.0f},cameraDirection))
+    , cameraUp(QVector3D::crossProduct(cameraDirection,cameraRight))
+//    , camera(this)
 {
-    translate=-6.0;
-    xRot=zRot=0.0;
-    yRot=-30.0;
+    vertices = {
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-    m_rotation_x = 30;
-    m_rotation_y = 0;
-    m_rotation_z = 0;
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-    LoadModel("/home/pengrui/workspace/qt/QOpenGLWidgetDemo/models/qt.obj");
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-    connect(&m_timer, SIGNAL(timeout()), this, SLOT(slot_timeout()));
-    m_timer.start(1000);
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+
+    cubePositions = {
+      { 0.0f,  0.0f,  0.0f  },
+      { 2.0f,  5.0f, -15.0f },
+      {-1.5f, -2.2f, -2.5f  },
+      {-3.8f, -2.0f, -12.3f },
+      { 2.4f, -0.4f, -3.5f  },
+      {-1.7f,  3.0f, -7.5f  },
+      { 1.3f, -2.0f, -2.5f  },
+      { 1.5f,  2.0f, -2.5f  },
+      { 1.5f,  0.2f, -1.5f  },
+      {-1.3f,  1.0f, -1.5f  },
+    };
+
+    timer.setInterval(18);
+    connect(&timer,&QTimer::timeout,this,static_cast<void (OpenGLWidget::*)()>(&OpenGLWidget::update));
+    timer.start();
 }
 
-void OpenGLWidget::slot_timeout()
+OpenGLWidget::~OpenGLWidget()
 {
-    m_rotation_x += 0.5;
-    update();
-}
-
-void OpenGLWidget::LoadModel(const QString &filename)
-{
-    QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly))
-        return;
-
-    Point3d boundsMin( 1e9, 1e9, 1e9);
-    Point3d boundsMax(-1e9,-1e9,-1e9);
-
-    QTextStream in(&file);
-    while (!in.atEnd()) {
-        QString input = in.readLine();
-        if (input.isEmpty() || input[0] == '#')
-            continue;
-
-        QTextStream ts(&input);
-        QString id;
-        ts >> id;
-        if (id == "v") {
-            Point3d p;
-            for (int i = 0; i < 3; ++i) {
-                ts >> p[i];
-                boundsMin[i] = qMin(boundsMin[i], p[i]);
-                boundsMax[i] = qMax(boundsMax[i], p[i]);
-            }
-            m_points << p;
-        } else if (id == "f" || id == "fo") {
-            QVarLengthArray<int, 4> p;
-
-            while (!ts.atEnd()) {
-                QString vertex;
-                ts >> vertex;
-                const int vertexIndex = vertex.split('/').value(0).toInt();
-                if (vertexIndex)
-                    p.append(vertexIndex > 0 ? vertexIndex - 1 : m_points.size() + vertexIndex);
-            }
-
-            for (int i = 0; i < p.size(); ++i) {
-                const int edgeA = p[i];
-                const int edgeB = p[(i + 1) % p.size()];
-
-                if (edgeA < edgeB)
-                    m_edgeIndices << edgeA << edgeB;
-            }
-
-            for (int i = 0; i < 3; ++i)
-                m_pointIndices << p[i];
-
-            if (p.size() == 4)
-                for (int i = 0; i < 3; ++i)
-                    m_pointIndices << p[(i + 2) % 4];
-        }
-    }
-
-    const Point3d bounds = boundsMax - boundsMin;
-    const qreal scale = 1 / qMax(bounds.x, qMax(bounds.y, bounds.z));
-    for (int i = 0; i < m_points.size(); ++i)
-        m_points[i] = (m_points[i] - (boundsMin + bounds * 0.5)) * scale;
-
-    m_normals.resize(m_points.size());
-    for (int i = 0; i < m_pointIndices.size(); i += 3) {
-        const Point3d a = m_points.at(m_pointIndices.at(i));
-        const Point3d b = m_points.at(m_pointIndices.at(i+1));
-        const Point3d c = m_points.at(m_pointIndices.at(i+2));
-
-        const Point3d normal = cross(b - a, c - a).normalize();
-
-        for (int j = 0; j < 3; ++j)
-            m_normals[m_pointIndices.at(i + j)] += normal;
-    }
-
-    for (int i = 0; i < m_normals.size(); ++i)
-        m_normals[i] = m_normals[i].normalize();
+    makeCurrent();
+    texture.destroy();
+    texture1.destroy();
+    doneCurrent();
 }
 
 void OpenGLWidget::initializeGL()
 {
-    initializeOpenGLFunctions();
-    glEnable(GL_DEPTH_TEST);
-    glEnableClientState(GL_VERTEX_ARRAY);
-#if 0
-    texture[0]=new QOpenGLTexture(QImage(QString(":/myopengl/side%1.bmp")));
-    texture[1]=new QOpenGLTexture(QImage(QString(":/myopengl/side%2.bmp")));
-    QOpenGLShader *vshader=new QOpenGLShader(QOpenGLShader::Vertex,this);
-    const char *vsrc=
-       "#version 150                               \n"
-       "in vec4 vPosition;                         \n"
-       "in vec4 vTexCoord;                         \n"
-       "out vec4 texCoord;                         \n"
-       "uniform mat4 matrix;                       \n"
-       "void main(){                               \n"
-       "texCoord=vTexCoord;                        \n"
-       "gl_Position=matrix*vPosition;              \n"
-       "}                                          \n";
-    if (!vshader->compileSourceCode(vsrc))
-    {
-        return;
+    this->initializeOpenGLFunctions();        //初始化opengl函数
+    if(!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex,":/resources/triangle.vert")){     //添加并编译顶点着色器
+        qDebug()<<"ERROR:"<<shaderProgram.log();    //如果编译出错,打印报错信息
     }
-    QOpenGLShader *fshader=new QOpenGLShader(QOpenGLShader::Fragment,this);
-    const char *fsrc=
-       "#version 150                              \n"
-       "uniform sampler2D tex;                    \n"
-       "in vec4 texCoord;                         \n"
-       "out vec4 fColor;                          \n"
-       "void main(){                              \n"
-       "fColor=texture(tex,vec2(texCoord));       \n"
-       "}                                         \n";
-    if (!fshader->compileSourceCode(fsrc))
-    {
-        return;
+    if(!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment,":/resources/triangle.frag")){   //添加并编译片段着色器
+        qDebug()<<"ERROR:"<<shaderProgram.log();    //如果编译出错,打印报错信息
     }
-    program=new QOpenGLShaderProgram(this);
-    if (!program->addShader(vshader))
-    {
-        return;
+    if(!shaderProgram.link()){                      //链接着色器
+        qDebug()<<"ERROR:"<<shaderProgram.log();    //如果链接出错,打印报错信息
     }
-    if (!program->addShader(fshader))
-    {
-        return;
-    }
-    if (!program->link())
-    {
-        return;
-    }
-    if (!program->bind())
-    {
-        return;
-    }
-#endif
+
+    QOpenGLVertexArrayObject::Binder{&VAO};
+
+    VBO.create();       //生成VBO对象
+    VBO.bind();         //将VBO绑定到当前的顶点缓冲对象（QOpenGLBuffer::VertexBuffer）中
+
+    //将顶点数据分配到VBO中，第一个参数为数据指针，第二个参数为数据的字节长度
+    VBO.allocate(vertices.data(),sizeof(float)*vertices.size());
+
+    texture.create();
+    texture.setData(QImage(":/resources/msg_info.png").mirrored());
+    texture.setMinMagFilters(QOpenGLTexture::LinearMipMapLinear,QOpenGLTexture::Linear);
+    texture.setWrapMode(QOpenGLTexture::DirectionS,QOpenGLTexture::Repeat);
+    texture.setWrapMode(QOpenGLTexture::DirectionT,QOpenGLTexture::Repeat);
+
+    texture1.create();
+    texture1.setData(QImage(":/resources/tusimple_logo.png").mirrored());
+    texture1.setMinMagFilters(QOpenGLTexture::LinearMipMapLinear,QOpenGLTexture::Linear);
+    texture1.setWrapMode(QOpenGLTexture::DirectionS,QOpenGLTexture::Repeat);
+    texture1.setWrapMode(QOpenGLTexture::DirectionT,QOpenGLTexture::Repeat);
+
+    //设置顶点解析格式，并启用顶点
+    shaderProgram.setAttributeBuffer("aPos", GL_FLOAT, 0, 3, sizeof(GLfloat) * 5);
+    shaderProgram.enableAttributeArray("aPos");
+    shaderProgram.setAttributeBuffer("aTexCoord", GL_FLOAT,sizeof(GLfloat) * 3, 2, sizeof(GLfloat) * 5);
+    shaderProgram.enableAttributeArray("aTexCoord");
+
+     this->glEnable(GL_DEPTH_TEST);
+
+//     camera.init();
 }
 
 void OpenGLWidget::resizeGL(int w, int h)
 {
-
+    this->glViewport(0,0,w,h);                //定义视口区域
 }
 
 void OpenGLWidget::paintGL()
 {
-    int w=width();
-    int h=height();
-    int side=qMin(w,h);
 
-    glViewport((w-side)/2,(h-side)/2,side,side);
-    glClear(GL_COLOR_BUFFER_BIT|GL_ACCUM_BUFFER_BIT);
-#if 0
-    GLfloat vertices[2][4][3]=
-    {
-        {
-            {-0.8f,0.8f,0.8f},
-            {-0.8f,-0.8f,0.8f},
-            {0.8f,-0.8f,0.8f},
-            {0.8f,0.8f,0.8f}
-        },
-        {
-            {0.8f,0.8f,0.8f},
-            {0.8f,-0.8f,0.8f},
-            {0.8f,-0.8f,-0.8f},
-            {0.8f,0.8f,-0.8f}
-        },
-    };
-    vbo.create();
-    vbo.bind();
-    vbo.allocate(vertices,48*sizeof(GLfloat));
-    GLuint vPosition =program->attributeLocation("vPosition");
-    //glVertexAttribPointer(vPosition, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-    glEnableVertexAttribArray(vPosition);
-    program->setAttributeBuffer(vPosition,GL_FLOAT,0,3,0);
-    GLfloat coords[2][4][2]=
-    {
-        {
-            {0.0f,1.0f},
-            {0.0f,0.0f},
-            {1.0f,0.0f},
-            {1.0f,1.0f}
-        },
-        {
-            {0.0f,1.0f},
-            {0.0f,0.0f},
-            {1.0f,0.0f},
-            {1.0f,1.0f}
-        }
-    };
-    vbo.write(24*sizeof (GLfloat),coords,16*sizeof(GLfloat));
-    GLuint vTexCoord=program->attributeLocation("vTexCoord");
-    program->setAttributeBuffer(vTexCoord,GL_FLOAT,24*sizeof (GLfloat),2,0);
-    glEnableVertexAttribArray(vTexCoord);
-    program->setUniformValue("tex",0);
-    //透视投影效果
-    QMatrix4x4 matrix;
-    matrix.perspective(45.0f,(GLfloat)w/(GLfloat)h,0.1f,100.0f);
-    matrix.translate(0,0,translate);
-    matrix.rotate(xRot,1.0,0.0,0.0);
-    matrix.rotate(yRot,0.0,1.0,0.0);
-    matrix.rotate(zRot,0.0,0.0,1.0);
-    program->setUniformValue("matrix",matrix);
-    for(int i=0;i<2;i++)
-    {
-        texture[i]->bind();
-        glDrawArrays(GL_TRIANGLE_FAN, i*4, 4);
+    this->glClearColor(0.1f,0.5f,0.7f,1.0f);                       //设置清屏颜色
+    this->glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);       //清除颜色缓存和深度缓存
+    float time=QTime::currentTime().msecsSinceStartOfDay()/1000.0;
+    shaderProgram.bind();                                          //使用shaderProgram着色程序
+//    shaderProgram.setUniformValue("view",camera.getView());
+    QMatrix4x4 projection;
+    projection.perspective(45.0f,width()/(float)height(),0.1f,100.0f);
+    shaderProgram.setUniformValue("projection",projection);
+
+    texture.bind(0);                                    //将texture绑定到纹理单元0
+    shaderProgram.setUniformValue("ourTexture",0);      //让ourTexture从纹理单元0中获取纹理数据
+
+    texture1.bind(1);                                    //将texture绑定到纹理单元1
+    shaderProgram.setUniformValue("ourTexture1",1);      //让ourTexture从纹理单元1中获取纹理数据
+    QOpenGLVertexArrayObject::Binder{&VAO};
+
+    for(unsigned int i = 0; i < 10; i++){
+        QMatrix4x4 model;
+        model.translate(cubePositions[i]);
+        model.rotate(180*time+i*20.0f,QVector3D(1.0f,0.5f,0.3f));
+        shaderProgram.setUniformValue("model",model);
+        this->glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    //    glDrawArrays(GL_POINTS,0,1);
-#endif
-    bool normals = true;
-    bool wireframe = true;
-    if (wireframe) {
-        glVertexPointer(3, GL_FLOAT, 0, (float *)m_points.data());
-        glDrawElements(GL_LINES, m_edgeIndices.size(), GL_UNSIGNED_INT, m_edgeIndices.data());
-    } else {
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_SMOOTH);
-
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glVertexPointer(3, GL_FLOAT, 0, (float *)m_points.data());
-        glNormalPointer(GL_FLOAT, 0, (float *)m_normals.data());
-        glDrawElements(GL_TRIANGLES, m_pointIndices.size(), GL_UNSIGNED_INT, m_pointIndices.data());
-
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisable(GL_COLOR_MATERIAL);
-        glDisable(GL_LIGHT0);
-        glDisable(GL_LIGHTING);
-    }
-
-    if (normals) {
-        QVector<Point3d> normals;
-        for (int i = 0; i < m_normals.size(); ++i)
-            normals << m_points.at(i) << (m_points.at(i) + m_normals.at(i) * 0.02f);
-        glVertexPointer(3, GL_FLOAT, 0, (float *)normals.data());
-        glDrawArrays(GL_LINES, 0, normals.size());
-    }
-
-    glRotatef(m_rotation_x, 1, 0, 0);
-    glRotatef(m_rotation_y, 0, 1, 0);
-    glRotatef(m_rotation_z, 0, 0, 1);
-
-//    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisable(GL_DEPTH_TEST);
 }
 
-void OpenGLWidget::keyPressEvent(QKeyEvent *event)
+
+bool OpenGLWidget::event(QEvent *e)
 {
-    switch (event->key())
-    {
-    case Qt::Key_Up:
-        xRot+=10;
-        break;
-    case Qt::Key_Left:
-            yRot+=10;
-            break;
-    case Qt::Key_Right:
-            zRot+=10;
-            break;
-    case Qt::Key_Down:
-            translate-=1;
-            break;
-    case Qt::Key_Space:
-            translate+=1;
-            break;
-    default:
-        break;
-    }
-    update();
-    QOpenGLWidget::keyPressEvent(event);
+//    camera.handle(e);
+    return QWidget::event(e);   //调用父类的事件分发函数
 }
-
-void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
-{
-
-    if (event->isAccepted())
-        return;
-    if (event->buttons() & Qt::LeftButton) {
-        const QPointF delta = event->pos();
-        const Point3d angularImpulse = Point3d(delta.y(), delta.x(), 0) * 0.1;
-
-//        m_rotation += angularImpulse;
-//        m_accumulatedMomentum += angularImpulse;
-
-//        event->accept();
-        update();
-    }
-    QOpenGLWidget::mouseMoveEvent(event);
-}
-
-void OpenGLWidget::mousePressEvent(QMouseEvent *event)
-{
-
-    if (event->isAccepted())
-        return;
-
-//    m_mouseEventTime = m_time.elapsed();
-//    m_angularMomentum = m_accumulatedMomentum = Point3d();
-    event->accept();
-    QOpenGLWidget::mousePressEvent(event);
-}
-
-void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-    if (event->isAccepted())
-        return;
-
-//    const int delta = m_time.elapsed() - m_mouseEventTime;
-//    m_angularMomentum = m_accumulatedMomentum * (1000.0 / qMax(1, delta));
-//    event->accept();
-    update();
-    QOpenGLWidget::mouseReleaseEvent(event);
-}
-
-void OpenGLWidget::wheelEvent(QWheelEvent *event)
-{
-    if (event->isAccepted())
-        return;
-
-//    m_distance *= qPow(1.2, -event->delta() / 120);
-//    event->accept();
-    update();
-    QOpenGLWidget::wheelEvent(event);
-}
-

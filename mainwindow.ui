@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>819</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="OpenGLWidget" name="openGLWidget"/>
+     <widget class="TriangleTest" name="openGLWidget"/>
     </item>
    </layout>
   </widget>
@@ -25,7 +25,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>819</width>
      <height>22</height>
     </rect>
    </property>
@@ -43,9 +43,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>OpenGLWidget</class>
+   <class>TriangleTest</class>
    <extends>QOpenGLWidget</extends>
-   <header>openglwidget.h</header>
+   <header>triangletest.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

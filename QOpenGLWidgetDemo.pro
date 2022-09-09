@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2022-09-08T23:47:37
+# Project created by QtCreator 2022-09-08T14:48:09
 #
 #-------------------------------------------------
 
@@ -27,12 +27,15 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    openglwidget.cpp
+        openglwidget.cpp \
+        triangletest.cpp \
+    modelloader.cpp
 
 HEADERS += \
         mainwindow.h \
-    openglwidget.h \
-    point3d.h
+        openglwidget.h \
+        triangletest.h \
+    modelloader.h
 
 FORMS += \
         mainwindow.ui
@@ -41,3 +44,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    main.qrc
