@@ -1,6 +1,9 @@
 #ifndef TRIANGLETEST_H
 #define TRIANGLETEST_H
 
+#include "modelloader.h"
+
+
 #include <QWheelEvent>
 // 引入相关库
 #include <QOpenGLWidget>
@@ -10,6 +13,7 @@
 // Qt提供的用于纹理操作相关的库
 #include <QOpenGLTexture>
 #include <QTimer>
+
 // 继承自相关类
 class TriangleTest : public QOpenGLWidget,QOpenGLFunctions_3_3_Core
 {
@@ -19,8 +23,8 @@ public:
     explicit TriangleTest(QWidget *parent = nullptr);
 
 private:
-
-    float vertices_data[180] = {
+#if 1
+    float vertices_data0[180] = {
            -0.3f, -0.3f, -0.3f,  0.0f, 0.0f,
             0.3f, -0.3f, -0.3f,  1.0f, 0.0f,
             0.3f,  0.3f, -0.3f,  1.0f, 1.0f,
@@ -63,6 +67,7 @@ private:
            -0.3f,  0.3f,  0.3f,  0.0f, 0.0f,
            -0.3f,  0.3f, -0.3f,  0.0f, 1.0f
     };
+#endif
 
     // VAO && VBO
     unsigned int VBO_id, VAO_id;
@@ -81,6 +86,11 @@ private:
     QPoint m_pos;
     QPoint m_prevPos;
     float m_cameraSensitivity;
+    std::vector<Point>  m_vpoints;
+    std::vector<Point>  m_vnpoints;
+    std::vector<Point>  m_vtpoints;
+
+    std::vector<float> m_vertices;
 public slots:
     void on_timeout();
 
@@ -95,6 +105,7 @@ protected:
     virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseReleaseEvent(QMouseEvent* e);
     virtual void mouseMoveEvent(QMouseEvent* e);
+    void LoadModel(const QString &pathname);
 };
 
 #endif // TRIANGLETEST_H

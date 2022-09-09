@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,12 +28,14 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         openglwidget.cpp \
-        triangletest.cpp
+        triangletest.cpp \
+    modelloader.cpp
 
 HEADERS += \
         mainwindow.h \
         openglwidget.h \
-        triangletest.h
+        triangletest.h \
+    modelloader.h
 
 FORMS += \
         mainwindow.ui
