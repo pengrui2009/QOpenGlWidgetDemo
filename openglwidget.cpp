@@ -180,6 +180,11 @@ void OpenGLWidget::paintGL()
     int h=height();
     int side=qMin(w,h);
 
+    QPainter painter(this);
+
+//    painter.setBrush(Qt::black);
+//    painter.drawRect(-width(), -height(), width()*2, height()*2);
+
     glViewport((w-side)/2,(h-side)/2,side,side);
     glClear(GL_COLOR_BUFFER_BIT|GL_ACCUM_BUFFER_BIT);
 #if 0
@@ -279,6 +284,7 @@ void OpenGLWidget::paintGL()
     glDisable(GL_DEPTH_TEST);
 
     glDisable(GL_MULTISAMPLE);
+
 
 }
 
