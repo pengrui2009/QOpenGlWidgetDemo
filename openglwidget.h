@@ -53,7 +53,8 @@ private:
     GLfloat m_rotation_y;
     GLfloat m_rotation_z;
 
-    QPointF m_prev_pos;
+    bool m_leftmouse_down;
+    QPointF m_last_pos;
     QPointF m_curr_pos;
 
     float m_distance;
