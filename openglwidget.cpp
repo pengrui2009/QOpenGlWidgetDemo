@@ -124,7 +124,7 @@ void OpenGLWidget::LoadModel(const QString &filename)
 void OpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-    glEnable(GL_DEPTH_TEST);
+
     glEnableClientState(GL_VERTEX_ARRAY);
 
     glClearColor(m_backgroundColor.redF(), m_backgroundColor.greenF(), m_backgroundColor.blueF(), 1.0f);
@@ -289,6 +289,7 @@ void OpenGLWidget::paintGL()
     bool normals = false;
     bool wireframe = false;
 
+    glEnable(GL_DEPTH_TEST);
 //    QRadialGradient gradient(40, 40, 40, 40, 40);
 //    gradient.setColorAt(0.2, Qt::yellow);
 //    gradient.setColorAt(1, Qt::transparent);
@@ -312,8 +313,8 @@ void OpenGLWidget::paintGL()
     glPushMatrix();
     glLoadIdentity();
 
-    int light_pos_x = 800;
-    int light_pos_y = 200;
+    int light_pos_x = 0;
+    int light_pos_y = 0;
     const float pos[] = { static_cast<float>(light_pos_x - width() / 2), static_cast<float>(height() / 2 - light_pos_y), 512, 0 };
     glLightfv(GL_LIGHT0, GL_POSITION, pos);
     glColor4f(m_modelColor.redF(), m_modelColor.greenF(), m_modelColor.blueF(), 1.0f);
@@ -373,7 +374,7 @@ void OpenGLWidget::paintGL()
 //    glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_DEPTH_TEST);
 
-//    QTimer::singleShot(20, this, SLOT(update()));
+    QTimer::singleShot(20, this, SLOT(update()));
 }
 
 void OpenGLWidget::keyPressEvent(QKeyEvent *event)
