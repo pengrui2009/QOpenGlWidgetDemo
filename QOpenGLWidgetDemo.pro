@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2022-09-08T14:48:09
+# Project created by QtCreator 2022-09-08T23:47:37
 #
 #-------------------------------------------------
 
@@ -27,18 +27,17 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-        openglwidget.cpp \
-        triangletest.cpp \
-    modelloader.cpp
+    openglwidget.cpp
 
 HEADERS += \
         mainwindow.h \
-        openglwidget.h \
-        triangletest.h \
-    modelloader.h
+    openglwidget.h \
+    point3d.h
 
 FORMS += \
         mainwindow.ui
+
+LIBS += -lglut -lGLU
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

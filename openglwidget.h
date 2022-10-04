@@ -1,44 +1,74 @@
 #ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
-#include <QOpenGLWidget>
-#include <QOpenGLExtraFunctions>
-#include <QOpenGLBuffer>
-#include <QOpenGLShaderProgram>
-#include <QOpenGLVertexArrayObject>
-#include <QOpenGLTexture>
-#include <QTimer>
+#include "point3d.h"
+
 #include <QTime>
-#include <QtMath>
-class OpenGLWidget : public QOpenGLWidget,public QOpenGLExtraFunctions
+#include <QTimer>
+#include <QWidget>
+#include "qopenglwidget.h"
+#include <qopenglfunctions.h>
+#include <qopenglshaderprogram.h>
+#include <QOpenGLBuffer>
+
+class QOpenGLShaderProgram;
+class QOpenGLTexture;
+
+class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
+public:
+    explicit OpenGLWidget(QWidget *parent = nullptr);
+
+//signals:
+
+public slots:
+    void slot_timeout();
 
 public:
-    OpenGLWidget(QWidget *parent = 0);
-    ~OpenGLWidget();
-protected:
-    virtual void initializeGL() override;
-    virtual void resizeGL(int w,int h) override;
-    virtual void paintGL() override;
-    virtual bool event(QEvent *e) override;
+    void LoadModel(const QString &filename);
+//    void paintEvent(QPaintEvent *e) override;
+
+    void initializeGL();
+    void resizeGL(int w, int h);
+    void paintGL();
+    void keyPressEvent(QKeyEvent*event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
 private:
-    QVector<float> vertices;
-    QVector<QVector3D> cubePositions;
-    QOpenGLShaderProgram shaderProgram;
-    QOpenGLBuffer VBO;
-    QOpenGLVertexArrayObject VAO;
-    QOpenGLTexture texture;
-    QOpenGLTexture texture1;
-    QTimer timer;
+    QString m_fileName;
+    QVector<Point3d> m_points;
+    QVector<Point3d> m_normals;
+    QVector<int> m_edgeIndices;
+    QVector<int> m_pointIndices;
 
-    QVector3D cameraPos;
-    QVector3D cameraTarget;
-    QVector3D cameraDirection;
-    QVector3D cameraRight;
-    QVector3D cameraUp;
+    QTimer m_timer;
+    QTime m_time;
+    int m_lastTime;
+    int m_mouseEventTime;
 
-//    Camera camera;
+    GLfloat m_rotation_x;
+    GLfloat m_rotation_y;
+    GLfloat m_rotation_z;
+
+    bool m_leftmouse_down;
+    QPointF m_last_pos;
+    QPointF m_curr_pos;
+
+    float m_distance;
+    Point3d m_rotation;
+    Point3d m_angularMomentum;
+    Point3d m_accumulatedMomentum;
+
+    QColor m_modelColor;
+    QColor m_backgroundColor;
+
+    QOpenGLShaderProgram *program;
+    QOpenGLBuffer vbo;
+    QOpenGLTexture* texture[2];
+    GLfloat translate,xRot,yRot,zRot;
 };
 
 

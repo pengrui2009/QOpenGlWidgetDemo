@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+	<file>resources/qss/lightblue.css</file>
         <file>resources/triangle.frag</file>
         <file>resources/triangle.vert</file>
         <file>resources/msg_info.png</file>
